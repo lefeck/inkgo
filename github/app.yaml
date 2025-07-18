@@ -1,0 +1,46 @@
+server:
+  env: "debug"
+  address: "0.0.0.0"
+  port: 8089
+  gracefulShutdownPeriod: 30
+  rateLimits:
+    fillInterval: 2
+    cap: 100
+    quantum: 100
+jwt:
+  secret: "ZfthgrIR2pQFbNoE1WSR+MKMG14Op8zKkGRkP9O+AvMtxHZfNcIM6uN5go9asMln"
+  expire: 7200
+  issuer: "inkgo.io"
+
+storage:
+  minio:
+    accessKey: "OalYRUloa0DcJlhRa_IJeJAQpMlIbK2cfbi39PiB"
+    secretKey: "vWPWpMwWXCrDSj3OVm8J1sjymM3gux1hecqhua7W"
+    bucket: "ginblogtest"
+    storageurl: "http://tom.niux.plus"
+
+db:
+  port: 3306
+  host: "192.168.10.143"
+  name: "test"
+  user: "root"
+  password: "123456"
+  migrate: false
+
+redis:
+  enable: true
+  port: 6379
+  host: "192.168.10.143"
+  password: "123456"
+
+logger:
+  level: "DEBUG"
+  filename: "./test.log"
+  maxsize: 2
+  maxage: 30
+  maxbackups: 5
+
+oauth:
+  github:
+    clientID: "Ov23li8FZMQ0wZ5ZAxho" # set your client id1
+    clientSecret: "aad0e2a92b117f04f3bce0172c3c167db9896336" # set your client secret

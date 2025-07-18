@@ -1,0 +1,27 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "contact": {}
+    },
+    "paths": {
+        "/healthz": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "healthz"
+                ],
+                "summary": "Healthz",
+                "responses": {
+                    "200": {
+                        "description": "ok",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
