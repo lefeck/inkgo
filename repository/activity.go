@@ -2,7 +2,7 @@ package repository
 
 import (
 	"gorm.io/gorm"
-	
+	"inkgo/model"
 )
 
 // ActivityRepository 定义了活动相关的数据库操作接口
