@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"github.com/casbin/casbin/v2"
 	"inkgo/model"
 )
 
@@ -29,6 +30,7 @@ type Migrant interface {
 
 // user实现的接口
 type UserRepository interface {
+	InitAdmin(enforcer *casbin.Enforcer) error
 	GetUserByID(uint) (*model.User, error)
 	// 根据用户名、邮箱等查询（登录验证）
 	FindByUserName(username string) (*model.User, error)

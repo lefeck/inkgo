@@ -2,10 +2,13 @@ package repository
 
 import (
 	"errors"
+	"fmt"
+	"github.com/casbin/casbin/v2"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 	"inkgo/database"
 	"inkgo/model"
+	"inkgo/utils"
 	"strconv"
 )
 
@@ -37,6 +40,42 @@ func (u *userRepository) UpdatePassword(userID uint, hashedPassword string) erro
 	if err := u.SetCache(user); err != nil {
 		logrus.Errorf("failed to set user cache: %v", err)
 	}
+	return nil
+}
+
+// init 创建一个admin用户,role是admin, 密码是admin
+func (u *userRepository) InitAdmin(enforcer *casbin.Enforcer) error {
+	password, err := utils.HashPassword("admin")
+	if err != nil {
+		return err
+	}
+	adminUser := &model.User{
+		UserName: "admin",
+		Email:    "admin@root.com",
+		Password: password,
+		Role:     model.RoleAdmin,
+	}
+	// 检查是否存在 admin 用户
+	if err := u.db.Where("user_name = ?", adminUser.UserName).FirstOrCreate(adminUser).Error; err != nil {
+		return err
+	}
+	// 如果存在，检查角色是否为 admin
+	if adminUser.Role != model.RoleAdmin {
+		adminUser.Role = model.RoleAdmin
+		if err := u.db.Model(&model.User{}).Where("id = ?", adminUser.ID).Update("role", model.RoleAdmin).Error; err != nil {
+			return err
+		}
+	}
+
+	// 例如 p, admin, *, *, allow
+	hasPolicy, err := enforcer.HasPolicy("admin", "*", "*")
+	if !hasPolicy {
+		ok, err := enforcer.AddPolicy("admin", "*", "*")
+		if err != nil || !ok {
+			return fmt.Errorf("添加 admin 策略失败: %v", err)
+		}
+	}
+
 	return nil
 }
 

@@ -84,6 +84,7 @@ func (auth *AuthController) Login(c *gin.Context) {
 		utils.Success(c, gin.H{
 			"id":    user.ID,
 			"name":  user.UserName,
+			"role":  user.Role,
 			"token": token,
 		})
 
@@ -103,6 +104,7 @@ func (auth *AuthController) Login(c *gin.Context) {
 			utils.Success(c, gin.H{
 				"id":    user.ID,
 				"name":  user.UserName,
+				"role":  user.Role,
 				"token": token,
 			})
 		}

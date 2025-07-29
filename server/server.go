@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
+	"github.com/casbin/casbin/v2"
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
 	"github.com/gogo/protobuf/version"
@@ -38,6 +39,7 @@ type Server struct {
 	logger      *zap.Logger
 	repository  repository.Repository
 	controllers []controller.Controller
+	enforcer    *casbin.Enforcer
 }
 
 func New(conf *config.Config, logger *zap.Logger) (*Server, error) {
@@ -50,6 +52,8 @@ func New(conf *config.Config, logger *zap.Logger) (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	ennforcer := database.NewCasbin(db)
 
 	// initable redis
 	rdb, err := database.NewRedis(&conf.Redis)
@@ -65,6 +69,10 @@ func New(conf *config.Config, logger *zap.Logger) (*Server, error) {
 		}
 	}
 
+	// 初始化创建一个admin用户
+	if err = repository.User().InitAdmin(ennforcer); err != nil {
+		return nil, err
+	}
 	// user
 	userService := service.NewUserService(repository.User())
 	userController := controller.NewUserController(userService)
@@ -124,6 +132,7 @@ func New(conf *config.Config, logger *zap.Logger) (*Server, error) {
 		logger:      logger,
 		repository:  repository,
 		controllers: controllers,
+		enforcer:    ennforcer,
 	}, nil
 }
 
@@ -145,7 +154,10 @@ func (s *Server) Routers() {
 	public := root.Group("/api/v1")
 
 	api := root.Group("/api/v1")
-	api.Use(middleware.AuthenticationMiddleware(authentication.NewJWT(&s.config.JWTConfig, s.repository.Token()), s.repository.User()))
+	api.Use(middleware.AuthenticationMiddleware(authentication.NewJWT(&s.config.JWTConfig, s.repository.Token()),
+		s.repository.User()),
+	//middleware.CasbinMiddleware(s.enforcer),
+	)
 	controllers := make([]string, 0, len(s.controllers))
 	for _, router := range s.controllers {
 		switch router.Name() {

@@ -12,8 +12,9 @@ import (
 )
 
 type CustomClaims struct {
-	ID   uint   `json:"id"`
-	Name string `json:"name"`
+	UserID   uint   `json:"user_id"`
+	UserName string `json:"user_name"`
+	Role     string `json:"role"`
 	jwt.RegisteredClaims
 }
 
@@ -40,8 +41,9 @@ func (j *JWT) GenerateToken(user *model.User) (string, error) {
 	}
 	// 创建JWT并签名
 	claims := CustomClaims{
-		Name: user.UserName,
-		ID:   user.ID,
+		UserName: user.UserName,
+		UserID:   user.ID,
+		Role:     string(user.Role),
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    j.issuer,
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(j.expireDuration) * time.Second)), // 设置过期时间为24小时
@@ -71,9 +73,10 @@ func (j *JWT) ParseToken(tokenString string) (*model.User, error) {
 
 	user := &model.User{
 		Model: gorm.Model{
-			ID: claims.ID,
+			ID: claims.UserID,
 		},
-		UserName: claims.Name,
+		UserName: claims.UserName,
+		Role:     model.Role(claims.Role),
 	}
 	return user, nil
 }
@@ -149,8 +152,9 @@ func (j *JWT) RefreshToken(oldToken string) (string, error) {
 
 	// 创建新的claims
 	newClaims := CustomClaims{
-		ID:   claims.ID,
-		Name: claims.Name,
+		UserID:   claims.UserID,
+		UserName: claims.UserName,
+		Role:     claims.Role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    j.issuer,
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(j.expireDuration) * time.Second)), // 设置新的过期时间

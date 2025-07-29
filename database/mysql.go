@@ -32,5 +32,9 @@ func NewMysql(conf *config.DBConfig) (db *gorm.DB, err error) {
 		Logger: newLogger,
 	})
 
+	//adapter := gormadapter.NewAdapterByDB(db)
+	//enforcer := casbin.NewEnforcer("rbac_model.conf", adapter)
+	//_ = enforcer.LoadPolicy()
+
 	return db, nil
 }

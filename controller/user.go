@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"inkgo/common/request"
+	"inkgo/model"
 	"inkgo/utils"
 
 	"github.com/gin-gonic/gin"
@@ -57,29 +58,39 @@ func (u *UserController) List(c *gin.Context) {
 
 func (u *UserController) GetUserByID(c *gin.Context) {
 	uid := c.Param("id")
+
 	currentUser, ok := utils.UserFromContext(c)
 	if !ok || currentUser == nil {
 		utils.Error(c, http.StatusBadRequest, errors.New("未登录或 token 无效"))
 		return
 	}
-	id, err := strconv.Atoi(uid)
-	if err != nil {
-		utils.Error(c, http.StatusBadRequest, errors.New("无效的用户ID"))
-		return
-	}
+	if currentUser.Role == model.RoleAdmin {
+		user, err := u.userService.GetUserByID(uid)
+		if err != nil {
+			utils.Error(c, http.StatusInternalServerError, err)
+			return
+		}
+		utils.Success(c, user)
+	} else {
+		id, err := strconv.Atoi(uid)
+		if err != nil {
+			utils.Error(c, http.StatusBadRequest, errors.New("无效的用户ID"))
+			return
+		}
 
-	// 非管理员只能获取自己
-	if uint(id) != currentUser.ID && !utils.IsAdmin(currentUser) {
-		utils.Error(c, http.StatusUnauthorized, errors.New("无权查看其他用户信息"))
-		return
-	}
+		// 非管理员只能获取自己
+		if uint(id) != currentUser.ID {
+			utils.Error(c, http.StatusUnauthorized, errors.New("无权查看其他用户信息"))
+			return
+		}
 
-	user, err := u.userService.GetUserByID(uid)
-	if err != nil {
-		utils.Error(c, http.StatusInternalServerError, err)
-		return
+		user, err := u.userService.GetUserByID(uid)
+		if err != nil {
+			utils.Error(c, http.StatusInternalServerError, err)
+			return
+		}
+		utils.Success(c, user)
 	}
-	utils.Success(c, user)
 }
 
 // GetUserByName 获取用户信息

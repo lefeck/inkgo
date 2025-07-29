@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"gorm.io/gorm"
 	"inkgo/common/request"
+	"inkgo/utils"
 
 	"golang.org/x/crypto/bcrypt"
 	"inkgo/model"
@@ -140,7 +141,7 @@ func (u *userService) UpdatePassword(userID string, password string) error {
 	}
 
 	if len(password) > 0 {
-		hashed, err := hashPassword(password)
+		hashed, err := utils.HashPassword(password)
 		if err != nil {
 			return fmt.Errorf("failed to hash password: %w", err)
 		}
@@ -250,18 +251,13 @@ func (u *userService) GetUserByID(id string) (*model.User, error) {
 
 func (u *userService) Update(user *model.User) (*model.User, error) {
 	if len(user.Password) > 0 {
-		hashed, err := hashPassword(user.Password)
+		hashed, err := utils.HashPassword(user.Password)
 		if err != nil {
 			return nil, fmt.Errorf("failed to hash password: %w", err)
 		}
 		user.Password = hashed
 	}
 	return u.userRepository.Update(user)
-}
-
-func hashPassword(password string) (string, error) {
-	hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	return string(hashed), err
 }
 
 func (u *userService) Delete(id string) error {
